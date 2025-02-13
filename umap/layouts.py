@@ -255,6 +255,7 @@ def optimize_layout_euclidean(
     densmap_kwds=None,
     tqdm_kwds=None,
     move_other=False,
+    embedding_checkpoint_interval=5,
 ):
     """Improve an embedding using stochastic gradient descent to minimize the
     fuzzy set cross entropy between the 1-skeletons of the high dimensional
@@ -397,7 +398,7 @@ def optimize_layout_euclidean(
             dens_re_std = 0
             dens_re_mean = 0
             dens_re_cov = 0
-
+        ####################################################################################
         optimize_fn(
             head_embedding,
             tail_embedding,
@@ -433,14 +434,16 @@ def optimize_layout_euclidean(
         if verbose and n % int(n_epochs / 10) == 0:
             print("\tcompleted ", n, " / ", n_epochs, "epochs")
 
-        if epochs_list is not None and n in epochs_list:
+        # if epochs_list is not None and n in epochs_list:
+        if (n + 1) % embedding_checkpoint_interval == 0:
             embedding_list.append(head_embedding.copy())
 
     # Add the last embedding to the list as well
     if epochs_list is not None:
         embedding_list.append(head_embedding.copy())
 
-    return head_embedding if epochs_list is None else embedding_list
+    return head_embedding, embedding_list
+    # return head_embedding if epochs_list is None else embedding_list
 
 
 def _optimize_layout_generic_single_epoch(

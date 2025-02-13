@@ -1192,7 +1192,7 @@ def simplicial_set_embedding(
     ).astype(np.float32, order="C")
 
     if euclidean_output:
-        embedding = optimize_layout_euclidean(
+        embedding, history = optimize_layout_euclidean(
             embedding,
             embedding,
             head,
@@ -1298,7 +1298,7 @@ def simplicial_set_embedding(
 
         aux_data["rad_emb"] = re
 
-    return embedding, aux_data
+    return embedding, aux_data, history
 
 
 @numba.njit()
@@ -2814,7 +2814,7 @@ class UMAP(BaseEstimator, ClassNamePrefixFeaturesOutMixin):
             epochs = (
                 self.n_epochs_list if self.n_epochs_list is not None else self.n_epochs
             )
-            self.embedding_, aux_data = self._fit_embed_data(
+            self.embedding_, aux_data, self.embedding_hist = self._fit_embed_data(
                 self._raw_data[index],
                 epochs,
                 init,
