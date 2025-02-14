@@ -217,7 +217,6 @@ def smooth_knn_dist(distances, k, n_iter=64, local_connectivity=1.0, bandwidth=1
             rho[i] = np.max(non_zero_dists)
 
         for n in range(n_iter):
-
             psum = 0.0
             for j in range(1, distances.shape[1]):
                 d = distances[i, j] - rho[i]
@@ -712,7 +711,6 @@ def reprocess_row(probabilities, k=15, n_iters=32):
     mid = 1.0
 
     for n in range(n_iters):
-
         psum = 0.0
         for j in range(probabilities.shape[0]):
             psum += pow(probabilities[j], mid)
@@ -858,7 +856,6 @@ def discrete_metric_simplicial_set_intersection(
 def general_simplicial_set_intersection(
     simplicial_set1, simplicial_set2, weight=0.5, right_complement=False
 ):
-
     if right_complement:
         result = simplicial_set1.tocoo()
     else:
@@ -958,6 +955,7 @@ def simplicial_set_embedding(
     parallel=False,
     verbose=False,
     tqdm_kwds=None,
+    embedding_checkpoint_interval=5,
 ):
     """Perform a fuzzy simplicial set embedding, using a specified
     initialisation method and then minimizing the fuzzy set cross entropy
@@ -1212,6 +1210,7 @@ def simplicial_set_embedding(
             densmap_kwds=densmap_kwds,
             tqdm_kwds=tqdm_kwds,
             move_other=True,
+            embedding_checkpoint_interval=embedding_checkpoint_interval,
         )
     else:
         embedding = optimize_layout_generic(
@@ -1703,6 +1702,7 @@ class UMAP(BaseEstimator, ClassNamePrefixFeaturesOutMixin):
         output_dens=False,
         disconnection_distance=None,
         precomputed_knn=(None, None, None),
+        embedding_checkpoint_interval=5,
     ):
         self.n_neighbors = n_neighbors
         self.metric = metric
@@ -1743,6 +1743,7 @@ class UMAP(BaseEstimator, ClassNamePrefixFeaturesOutMixin):
         self.output_dens = output_dens
         self.disconnection_distance = disconnection_distance
         self.precomputed_knn = precomputed_knn
+        self.embedding_checkpoint_interval = embedding_checkpoint_interval
 
         self.n_jobs = n_jobs
 
@@ -2005,7 +2006,7 @@ class UMAP(BaseEstimator, ClassNamePrefixFeaturesOutMixin):
         if hasattr(self, "knn_dists") and self.knn_dists is not None:
             if self.unique:
                 raise ValueError(
-                    "unique is not currently available for " "precomputed_knn."
+                    "unique is not currently available for precomputed_knn."
                 )
             if not isinstance(self.knn_indices, np.ndarray):
                 raise ValueError("precomputed_knn[0] must be ndarray object.")
@@ -2123,7 +2124,6 @@ class UMAP(BaseEstimator, ClassNamePrefixFeaturesOutMixin):
         self._b = flattened([m._b for m in models])
 
     def __mul__(self, other):
-
         check_is_fitted(
             self, attributes=["graph_"], msg="Only fitted UMAP models can be combined"
         )
@@ -2195,7 +2195,6 @@ class UMAP(BaseEstimator, ClassNamePrefixFeaturesOutMixin):
         return result
 
     def __add__(self, other):
-
         check_is_fitted(
             self, attributes=["graph_"], msg="Only fitted UMAP models can be combined"
         )
@@ -2265,7 +2264,6 @@ class UMAP(BaseEstimator, ClassNamePrefixFeaturesOutMixin):
         return result
 
     def __sub__(self, other):
-
         check_is_fitted(
             self, attributes=["graph_"], msg="Only fitted UMAP models can be combined"
         )
@@ -2849,7 +2847,6 @@ class UMAP(BaseEstimator, ClassNamePrefixFeaturesOutMixin):
                 self.rad_orig_ = aux_data["rad_orig"][inverse]
                 self.rad_emb_ = aux_data["rad_emb"][inverse]
 
-
         if self.verbose:
             print(ts() + " Finished embedding")
 
@@ -2892,6 +2889,7 @@ class UMAP(BaseEstimator, ClassNamePrefixFeaturesOutMixin):
             self.random_state is None,
             self.verbose,
             tqdm_kwds=self.tqdm_kwds,
+            embedding_checkpoint_interval=self.embedding_checkpoint_interval,
         )
 
     def fit_transform(self, X, y=None, force_all_finite=True, **kwargs):
@@ -3375,10 +3373,9 @@ class UMAP(BaseEstimator, ClassNamePrefixFeaturesOutMixin):
         if self.metric == "precomputed":
             raise ValueError("Update does not currently support precomputed metrics")
         if self._supervised:
-            raise ValueError("Updating supervised models is not currently " "supported")
+            raise ValueError("Updating supervised models is not currently supported")
 
         if self._small_data:
-
             if self._sparse_data:
                 self._raw_data = scipy.sparse.vstack([self._raw_data, X])
             else:
